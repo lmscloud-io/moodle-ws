@@ -146,8 +146,7 @@ function _buildws_convert($value, $key = null, $parent = null) {
     if ($value instanceof external_description || is_array($value) || is_object($value)) {
         $rv = [];
         if ($value instanceof external_description) {
-            $classparts = preg_split('/\\\\/', get_class($value));
-            $rv['class'] = $classparts[count($classparts) - 1];
+            $rv['class'] = join(',', _buildws_class_name(get_class($value)));
         }
         foreach ($value as $k => $v) {
             $rv[$k] = _buildws_convert($v, $k, $value);
@@ -179,6 +178,22 @@ function _buildws_get_component_version($plugindir) {
     $plugin = new \stdClass();
     include($versionpath);
     return "" . $plugin->version;
+}
+
+/**
+ * Returns a list of class names in the inheritance chain
+ *
+ * Only returns the last part of the namespaced classes. Stops at external_description (abstract class that is always the parent).
+ *
+ * @param string|false $classname
+ * @return array
+ */
+function _buildws_class_name($classname): array {
+    $shortclassname = $classname ? preg_replace('/^(.*\\\\)/', '', $classname) : '';
+    if ($shortclassname == "external_description" || empty($classname)) {
+        return [];
+    }
+    return array_merge([$shortclassname], _buildws_class_name(get_parent_class($classname)));
 }
 
 function _buildws_get_core_version() {
