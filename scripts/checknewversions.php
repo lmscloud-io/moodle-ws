@@ -100,6 +100,10 @@ function get_php_version($branch) {
     $branch = (int)preg_replace('/[^\d]/', '', $branch);
     foreach ($versionrequirements as $versioninfo) {
         if ($versioninfo['moodle'] == $branch) {
+            if (in_array($versioninfo['phpmin'], ['7.2', '7.3'])) {
+                // 7.4 is still supported but 7.2 and 7.3 do not work.
+                return '7.4';
+            }
             return $versioninfo['phpmin'];
         }
     }

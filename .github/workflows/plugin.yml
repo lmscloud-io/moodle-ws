@@ -29,8 +29,10 @@ on:
         default: mariadb
 
 jobs:
-  test:
+  process-version:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
 
     services:
       postgres:
