@@ -4,13 +4,29 @@ on:
   workflow_dispatch:
     inputs:
       plugin:
-        description: "Plugin name"
-        required: true
+        description: 'Plugin name'
         type: string
+        required: true
       pluginversion:
-        description: "Plugin version"
-        required: true
+        description: 'Plugin version'
         type: string
+        required: true
+      downloadurl:
+        description: 'Plugin download URL'
+        type: string
+        required: true
+      moodlebranch:
+        description: 'Moodle branch'
+        type: string
+        required: true
+      phpversion:
+        description: 'PHP version'
+        type: string
+        required: true
+      database:
+        description: 'Database type (mariadb or postgres)'
+        type: string
+        default: mariadb
 
 jobs:
   process-version:
