@@ -1,7 +1,22 @@
 <?php
+// This file is part of moodle-ws-catalog.
+//
+// moodle-ws-catalog is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// moodle-ws-catalog is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with moodle-ws-catalog. If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * Fixes listings of core/plugin versions, list of plugins and function names that do not start with the plugin name.
+ * Removes version files that are identical to the previous version.
  */
 
 $maindir = dirname(__DIR__);
@@ -15,16 +30,24 @@ if (!is_dir($coredir) || !is_dir($pluginsdir) || !file_exists($pluginslistfile))
     exit(1);
 }
 
+// Make sure we do not delete plugins that were not yet analysed.
+$pluginlines = preg_split('/\n/', file_get_contents($pluginslistfile), -1, PREG_SPLIT_NO_EMPTY);
+$knownplugins = array_map(function($line) {
+    return explode(':', $line)[0];
+}, $pluginlines);
+$knownplugins = array_diff($knownplugins, ['core']);
+
 // Scan all versions in core/ directory.
 $coreinfo = organise_dir($coredir, function($name) {
     return strpos($name, 'core_') !== 0;
 });
-$lines[] = 'core:' . $coreinfo;
+$lines[] = 'core' . $coreinfo;
 
 // Scan directory plugins/ and find all subdirectories, for each plugin find versions and odd function names.
 $plugins = array_filter(scandir($pluginsdir), function ($item) use ($pluginsdir) {
     return is_dir($pluginsdir . '/' . $item) && !in_array($item, ['.', '..']);
 });
+$plugins = array_unique(array_merge($plugins, $knownplugins));
 sort($plugins);
 foreach ($plugins as $plugin) {
     $plugininfo = organise_dir($pluginsdir . '/' . $plugin, function($name) use ($plugin, $plugins) {
@@ -36,12 +59,15 @@ foreach ($plugins as $plugin) {
         }
         return false;
     });
-    $lines[] = $plugin . ':' . $plugininfo;
+    $lines[] = $plugin . $plugininfo;
 }
 file_put_contents($pluginslistfile, implode("\n", $lines) . "\n");
 
 
 function organise_dir($dir, $isodd) {
+    if (!is_dir($dir)) {
+        return '';
+    }
     // Scan directory and find all .json files in it, remove extensions, sort the list as (float).
     $files = scandir($dir);
     $files = array_filter($files, function ($file) {
@@ -79,5 +105,5 @@ function organise_dir($dir, $isodd) {
     sort($functionnames);
     $oddfunctions = array_filter($functionnames, $isodd);
 
-    return join(',', $allversions) . ($oddfunctions ? ':' . join(',', $oddfunctions) : '');
+    return ':' . join(',', $allversions) . ($oddfunctions ? ':' . join(',', $oddfunctions) : '');
 }
