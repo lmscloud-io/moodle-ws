@@ -91,10 +91,6 @@ jobs:
       - name: Install dependencies
         run: |
           moodle-plugin-ci add-plugin lmscloud-io/moodle-tool_wsdiscovery
-          echo "------ installing dependencies ------"
-          pwd
-          ls -la
-          echo "------ getting dependencies ------"
           php catalog/scripts/getdependencies.php ./plugin ${{ github.event.inputs.moodlebranch }} ./moodle-plugin-ci-plugins || exit 1
 
       - name: Install moodle
