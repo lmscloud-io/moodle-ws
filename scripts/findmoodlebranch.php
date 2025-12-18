@@ -43,12 +43,14 @@ $plugin = read_version_file($plugindir . '/version.php');
 $requires = $plugin->requires ?? 0;
 
 $moodleversions = json_decode(file_get_contents($maindir . '/moodleversions.json'), true);
+$lastrow = null;
 $branch = null;
 foreach ($moodleversions as $moodleversion) {
-    if (floor(((float)$requires)/100) >= floor(((float)$moodleversion['version'])/100)) {
-        $branch = $moodleversion['moodle'];
+    if ($lastrow != null && (float)$requires < (float)$moodleversion['version']) {
+        $branch = $lastrow['moodle'];
         break;
     }
+    $lastrow = $moodleversion;
 }
 if ($branch === null) {
     echo "No branch found for requires={$requires}\n";
