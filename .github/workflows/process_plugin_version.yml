@@ -63,6 +63,13 @@ jobs:
 
       - name: Download specified plugin version
         run: |
+          echo "========================================"
+          echo "Plugin: ${{ github.event.inputs.plugin }}"
+          echo "Version: ${{ github.event.inputs.pluginversion }}"
+          echo "Download URL: ${{ github.event.inputs.downloadurl }}"
+          echo "Moodle branch: ${{ github.event.inputs.moodlebranch }}"
+          echo "PHP version: ${{ github.event.inputs.phpversion }}"
+          echo "========================================"
           url="${{ github.event.inputs.downloadurl }}"
           curl -L "$url" -o plugin.zip || exit 1
           unzip -d tmp plugin.zip
