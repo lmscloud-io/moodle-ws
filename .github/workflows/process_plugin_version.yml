@@ -88,6 +88,14 @@ jobs:
           sudo locale-gen en_AU.UTF-8
           echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
 
+      - name: Install dependencies
+        run: |
+          echo "------ installing dependencies ------"
+          pwd
+          ls -la
+          echo "------ getting dependencies ------"
+          php catalog/scripts/getdependencies.php ./plugin ${{ github.event.inputs.moodlebranch }} ./moodle-plugin-ci-plugins || exit 1
+
       - name: Install moodle
         run: |
           moodle-plugin-ci add-plugin lmscloud-io/moodle-tool_wsdiscovery
