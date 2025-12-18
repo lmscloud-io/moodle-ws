@@ -2,7 +2,7 @@
 
 A comprehensive, open-source catalog of all web service functions available across Moodle core and selected community plugins hosted on moodle.org/plugins.
 
-This catalog is used by [Moodle MCP Server](https://lmscloud.io/products/moodle-mcp-server) to retrieve web service signatures.
+This catalog is used by [Moodle MCP](https://lmscloud.io/products/moodle-mcp/) to retrieve web service signatures. Moodle MCP allows to execute Moodle web services using LLMs and natural language prompts.
 
 ## Overview
 This project automatically scans Moodle core and some community plugins to extract:
