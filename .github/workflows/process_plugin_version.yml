@@ -135,6 +135,7 @@ jobs:
           git config --global user.email 'contrib@lmscloud.io'
           git pull
           php scripts/processjson.php < ../moodle/temp.json
+          mkdir -p plugins/${{ github.event.inputs.plugin }}
           echo ${{ github.event.inputs.pluginversion }} >> plugins/${{ github.event.inputs.plugin }}/processed.txt
           php scripts/fixlistings.php
           git add .
