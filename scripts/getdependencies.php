@@ -34,8 +34,6 @@ if ($argc != 4) {
 }
 $plugindir = rtrim($argv[1], '/\\');
 $branch = $argv[2];
-$branch = preg_replace("/^MOODLE_/", "", $branch);
-$branch = preg_replace("/_STABLE$/", "", $branch);
 $destdir = rtrim($argv[3], '/\\');
 $tmpdir = $destdir . '/temp';
 
@@ -45,12 +43,28 @@ if (!is_dir($plugindir) || !is_dir($destdir)) {
 }
 
 $plugin = read_version_file($plugindir . '/version.php');
-$dependencies = array_keys($plugin->dependencies ?? []);
-foreach ($dependencies as $dependency) {
+$dependencies = $plugin->dependencies ?? [];
+if (empty($dependencies)) {
+    echo "No dependencies found.\n";
+    exit(0);
+}
+
+$plugininfo = get_plugin_info($plugin->component);
+$versioninfos = array_filter($plugininfo['versions'], function($versioninfo) use ($plugin) {
+    return "" . $versioninfo['version'] === "" . $plugin->version;
+});
+if (count($versioninfos) != 1) {
+    throw new Exception('Error: download.moodle.org did not return any information on version ' . $plugin->version . " of " . $plugin->component . ".\n");
+}
+$versioninfo = reset($versioninfos);
+$timecreated = $versioninfo['timecreated'];
+
+foreach ($dependencies as $dependency => $minversion) {
     echo "Processing dependency: {$dependency}\n";
     $zipfilepath = $destdir . '/' . $dependency . '.zip';
     try {
-        $url = get_plugin_url($dependency, $branch);
+        $bestversion = get_best_version($dependency, $minversion, $branch, $timecreated);
+        $url = $bestversion['downloadurl'];
         file_put_contents($zipfilepath, curl_get($url));
         $extractedfolder = unzip_file($zipfilepath, $tmpdir);
         rename($extractedfolder, $destdir . '/' . $dependency);
@@ -143,4 +157,64 @@ function get_plugin_url($pluginname, $branch) {
         throw new Exception('Error: download.moodle.org did not return any information on ' . $pluginname . ".\n");
     }
     return $data['pluginfo']['version']['downloadurl'];
+}
+
+function get_all_plugins_info() {
+    $url = "https://download.moodle.org/api/1.3/pluglist.php";
+    $response = curl_get($url);
+    $data = json_decode($response, true);
+    if (empty($data['plugins'])) {
+        echo 'Error: download.moodle.org did not return any plugins.';
+        exit(1);
+    }
+    return $data['plugins'];
+}
+
+function get_plugin_info($pluginname) {
+    static $allinfo = null;
+    if ($allinfo === null) {
+        $allinfo = get_all_plugins_info();
+    }
+    $plugininfos = array_filter($allinfo, function($plugin) use ($pluginname) {
+        return $plugin['component'] === $pluginname;
+    });
+    if (count($plugininfos) == 1) {
+        return reset($plugininfos);
+    }
+    throw new Exception('Error: download.moodle.org did not return any information on ' . $pluginname . ".\n");
+}
+
+function get_best_version($pluginname, $minversion, $branch, $timecreated) {
+    $plugininfo = get_plugin_info($pluginname);
+    // Find version where number is >= $minversion and timecreated <= $timecreated + 7 days and supportedmoodles includes $branch.
+    $matchingversions = array_filter($plugininfo['versions'], function($versioninfo) use ($minversion, $branch, $timecreated) {
+        if ((float)$minversion > 0 && (float)$versioninfo['version'] < (float)$minversion) {
+            return false;
+        }
+        if ($versioninfo['timecreated'] > $timecreated + 7 * 24 * 3600) {
+            return false;
+        }
+        $supportedmoodles = array_map(function($x) {
+            return get_moodle_branch($x['release']);
+        }, $versioninfo['supportedmoodles']);
+        if (!in_array($branch, $supportedmoodles)) {
+            return false;
+        }
+        return true;
+    });
+    return reset($matchingversions);
+}
+
+function get_moodle_branch($version) {
+    if ($version == "3.9") {
+        return 'MOODLE_39_STABLE';
+    } elseif ($version == "3.10") {
+        return 'MOODLE_310_STABLE';
+    } elseif ($version == "3.11") {
+        return 'MOODLE_311_STABLE';
+    } else {
+        $a = floor($version);
+        $b = (int)(($version - $a) * 10);
+        return "MOODLE_${a}0{$b}_STABLE";
+    }
 }
