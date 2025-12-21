@@ -80,10 +80,10 @@ function read_version_file($filepath) {
     include($filepath);
 
     if (!empty((array)$module)) {
-        throw new Exception('Error: version.php file uses $module which is not supported: ' . $filepath . "\n");
+        throw new Exception("Error: version.php file uses \$module which is not supported\n");
     }
     if (empty($plugin->version)) {
-        throw new Exception('Error: version.php file does not define $plugin->version: ' . $filepath . "\n");
+        throw new Exception("Error: version.php file does not define \$plugin->version\n");
     }
     return $plugin;
 }

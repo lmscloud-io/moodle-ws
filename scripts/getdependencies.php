@@ -39,7 +39,7 @@ if (!is_dir($plugindir) || !is_dir($destdir)) {
 $plugin = read_version_file($plugindir . '/version.php');
 $dependencies = $plugin->dependencies ?? [];
 if (empty($dependencies)) {
-    echo "No dependencies found.\n";
+    echo "Plugin {$plugin->component} ({$plugin->version}) has no dependencies.\n";
     exit(0);
 }
 
