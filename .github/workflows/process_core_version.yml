@@ -100,9 +100,9 @@ jobs:
           git config --global user.email 'contrib@lmscloud.io'
           git pull
           php scripts/processjson.php < ../moodle/temp.json
-          # sed -i '/^${{ github.event.inputs.moodlebranch }}:/d' core/processed.txt
-          # echo ${{ github.event.inputs.moodlebranch }}:${{ github.event.inputs.corecommit }} >> core/processed.txt
-          # php scripts/fixlistings.php
-          # git add .
-          # git commit -am "Update core ${{ github.event.inputs.moodlebranch }}, commit ${{ github.event.inputs.corecommit }}"
-          # git push
+          sed -i '/^${{ github.event.inputs.moodlebranch }}:/d' core/processed.txt
+          echo ${{ github.event.inputs.moodlebranch }}:${{ github.event.inputs.corecommit }} >> core/processed.txt
+          php scripts/fixlistings.php
+          git add .
+          git commit -am "Update core ${{ github.event.inputs.moodlebranch }}, commit ${{ github.event.inputs.corecommit }}"
+          git push
